@@ -32,7 +32,9 @@ var cmdmap = {
     join : cmd_join,
     play : cmd_play,
     stop : cmd_stop,
-    quit : cmd_quit
+    quit : cmd_quit,
+    pause : cmd_pause,
+    resume : cmd_resume
 }
 
 async function cmd_join(msg, args) {
@@ -61,7 +63,7 @@ async function cmd_play(msg, args) {
 }
 
 function cmd_stop(msg, args) {
-    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop")}
+    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return}
     player.destroy()
     client.channels.cache.get(config_controlchannel).send("Stopped the music")
 }
@@ -69,6 +71,16 @@ function cmd_stop(msg, args) {
 function cmd_quit(msg, args) {
     connection.disconnect()
     client.channels.cache.get(config_controlchannel).send("Quit the voice channel")
+}
+
+function cmd_pause(msg, args) {
+    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return}
+    player.pause()
+}
+
+function cmd_resume(msg, args) {
+    if(player.paused != true) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can resume"); return}
+    player.resume()
 }
 
 client.on('message', async (msg) => {
