@@ -2,6 +2,7 @@ const Discord       = require('discord.js')
 const ytdl          = require('ytdl-core')
 
 var client = new Discord.Client()
+
 var config_token = process.env.TOKEN
 var config_prefix = process.env.PREFIX
 var config_status = process.env.STATUS
