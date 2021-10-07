@@ -11,6 +11,8 @@ var config_controlchannel = process.env.CONTROLCHANNEL
 
 var connection = null
 var player = null
+var repeat = null
+var last_played = null
 
 client.on('ready', () => {
     activity()
@@ -26,7 +28,7 @@ var cmdmap = {
     join : cmd_join,
     play : cmd_play,
     stop : cmd_stop,
-    quit : cmd_quit
+    quit : cmd_quit,
 }
 
 async function cmd_join(msg, args) {
@@ -40,10 +42,22 @@ async function cmd_join(msg, args) {
 }
 
 async function cmd_play(msg, args) {
-    await cmd_join(msg, args);
-    player = connection.play(ytdl(args, { filter: 'audioonly', quality: 'highestaudio'}))
+    connection = await client.channels.cache.get(config_channel).join();
+    last_played = args[0]
+    if(args[1] == "true") { repeat = true } 
+    else if(args[1] == "false") { repeat = false} 
+    else { repeat = false }
+    player = connection.play(ytdl(last_played, { filter: 'audioonly', quality: 'highestaudio'}))
     player
     client.channels.cache.get(config_controlchannel).send("Started the music")
+    player.on('speaking', function(speaking) {
+        if(repeat == false) {return} 
+        if(speaking == true) {return} 
+        if(repeat == true) {
+            player = connection.play(ytdl(last_played, { filter: 'audioonly', quality: 'highestaudio'}))
+            player
+        }
+    })
 }
 
 function cmd_stop(msg, args) {
@@ -55,7 +69,6 @@ function cmd_quit(msg, args) {
     connection.disconnect()
     client.channels.cache.get(config_controlchannel).send("Quit the voice channel")
 }
-
 
 client.on('message', async (msg) => {
     var cont   = msg.content,
