@@ -13,6 +13,8 @@ var connection = null
 var player = null
 var repeat = null
 var last_played = null
+var speaking = null
+var volume = 100
 
 client.on('ready', () => {
     activity()
@@ -50,7 +52,8 @@ async function cmd_play(msg, args) {
     player = connection.play(ytdl(last_played, { filter: 'audioonly', quality: 'highestaudio'}))
     player
     client.channels.cache.get(config_controlchannel).send("Started the music")
-    player.on('speaking', function(speaking) {
+    player.on('speaking', function(speaking_local) {
+        speaking = speaking_local
         if(repeat == false) {return} 
         if(speaking == true) {return} 
         if(repeat == true) {
