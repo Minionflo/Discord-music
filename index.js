@@ -81,7 +81,7 @@ client.on('message', async (msg) => {
         guild  = msg.guild,
         author = msg.author
 
-        if(msg.member.roles.cache.get(config_musicrole).id == config_musicrole) {return}
+        if(msg.member.roles.cache.has(config_musicrole) == false) {return}
         if(msg.channel != client.channels.cache.get(config_controlchannel)) {return}
         if (author.id != client.user.id && cont.startsWith(config_prefix)) {
             var invoke = cont.split(' ')[0].substr(config_prefix.length),
