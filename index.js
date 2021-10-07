@@ -36,13 +36,8 @@ var cmdmap = {
 }
 
 async function cmd_join(msg, args) {
-    if (!msg.guild) return;
-    if (msg.member.voice.channel) {
-        connection = await client.channels.cache.get(config_channel).join();
-        client.channels.cache.get(config_controlchannel).send("Joined the voice channel")
-    } else {
-        client.channels.cache.get(config_controlchannel).send("You need to be in a voice channel")
-    }
+    connection = await client.channels.cache.get(config_channel).join();
+    client.channels.cache.get(config_controlchannel).send("Joined the voice channel")
 }
 
 async function cmd_play(msg, args) {
@@ -66,6 +61,7 @@ async function cmd_play(msg, args) {
 }
 
 function cmd_stop(msg, args) {
+    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop")}
     player.destroy()
     client.channels.cache.get(config_controlchannel).send("Stopped the music")
 }
