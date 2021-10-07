@@ -1,5 +1,6 @@
 const Discord       = require('discord.js')
 const ytdl          = require('ytdl-core')
+const ytsr          = require('ytsr');
 
 var client = new Discord.Client()
 
@@ -14,7 +15,7 @@ var config_musicrole = process.env.MUSICROLE
 var connection = null
 var player = null
 var repeat = null
-var last_played = null
+var link = null
 var speaking = null
 var volume = 100
 
@@ -28,8 +29,29 @@ function activity() {
     client.user.setActivity(config_status, {type: config_statustype})
 }
 
+async function play(link_local, repeat_local) {
+    connection = await client.channels.cache.get(config_channel).join();
+    link = link_local
+    if(repeat_local == "true") { repeat = true } 
+    else if(repeat_local == "false") { repeat = false} 
+    else { repeat = false }
+    player = connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
+    client.channels.cache.get(config_controlchannel).send("Music started")
+    client.channels.cache.get(config_controlchannel).send("Link: " + link)
+    player.on('speaking', function(speaking_local) {
+        speaking = speaking_local
+        if(repeat == false) {return} 
+        if(speaking == true) {return} 
+        if(repeat == true) {
+            player = connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
+        }
+    })
+}
+
+
 var cmdmap = {
     join : cmd_join,
+    playlink : cmd_playlink,
     play : cmd_play,
     stop : cmd_stop,
     quit : cmd_quit,
@@ -42,30 +64,24 @@ async function cmd_join(msg, args) {
     client.channels.cache.get(config_controlchannel).send("Joined the voice channel")
 }
 
+function cmd_playlink(msg, args) {
+    play(args[1], args[0])
+}
+
 async function cmd_play(msg, args) {
-    connection = await client.channels.cache.get(config_channel).join();
-    last_played = args[0]
-    if(args[1] == "true") { repeat = true } 
-    else if(args[1] == "false") { repeat = false} 
-    else { repeat = false }
-    player = connection.play(ytdl(last_played, { filter: 'audioonly', quality: 'highestaudio'}))
-    player
-    client.channels.cache.get(config_controlchannel).send("Started the music")
-    player.on('speaking', function(speaking_local) {
-        speaking = speaking_local
-        if(repeat == false) {return} 
-        if(speaking == true) {return} 
-        if(repeat == true) {
-            player = connection.play(ytdl(last_played, { filter: 'audioonly', quality: 'highestaudio'}))
-            player
-        }
-    })
+    var repeat_local = false
+    if(args[0] == "true" || args[0] == "false") { repeat_local = args[0]; args.shift() }
+    var filters = await ytsr.getFilters(args.join(" ").toString())
+    var filter = filters.get('Type').get('Video');
+    var raw = await ytsr(filter.url, { limit: 1 })
+    var url = raw.items[0].url
+    play(url, repeat_local)
 }
 
 function cmd_stop(msg, args) {
     if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return}
     player.destroy()
-    client.channels.cache.get(config_controlchannel).send("Stopped the music")
+    client.channels.cache.get(config_controlchannel).send("Music stopped")
 }
 
 function cmd_quit(msg, args) {
@@ -76,11 +92,13 @@ function cmd_quit(msg, args) {
 function cmd_pause(msg, args) {
     if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return}
     player.pause()
+    client.channels.cache.get(config_controlchannel).send("Music paused")
 }
 
 function cmd_resume(msg, args) {
     if(player.paused != true) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can resume"); return}
     player.resume()
+    client.channels.cache.get(config_controlchannel).send("Music resumed")
 }
 
 client.on('message', async (msg) => {
