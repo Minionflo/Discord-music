@@ -1,4 +1,4 @@
-FROM node:lts
+FROM node:14.15.5
 RUN mkdir -p /usr/src/bot
 WORKDIR /usr/src/bot
 COPY . /usr/src/bot
