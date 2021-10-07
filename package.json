@@ -11,8 +11,12 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.5.3",
+    "bufferutil": "^4.0.4",
     "discord.js": "12.5.3",
     "ffmpeg-static": "^4.4.0",
-    "ytdl-core": "^4.9.1"
+    "sodium": "^3.0.2",
+    "utf-8-validate": "^5.0.6",
+    "ytdl-core": "^4.9.1",
+    "ytsr": "^3.5.3"
   }
 }
