@@ -8,6 +8,7 @@ var config_status = process.env.STATUS
 var config_statustype = process.env.STATUSTYPE
 var config_channel = process.env.CHANNEL
 var config_controlchannel = process.env.CONTROLCHANNEL
+var config_musicrole = process.env.MUSICROLE
 
 var connection = null
 var player = null
@@ -30,7 +31,7 @@ var cmdmap = {
     join : cmd_join,
     play : cmd_play,
     stop : cmd_stop,
-    quit : cmd_quit,
+    quit : cmd_quit
 }
 
 async function cmd_join(msg, args) {
@@ -80,20 +81,15 @@ client.on('message', async (msg) => {
         guild  = msg.guild,
         author = msg.author
 
+        if(msg.member.roles.cache.get(config_musicrole).id == config_musicrole) {return}
         if(msg.channel != client.channels.cache.get(config_controlchannel)) {return}
         if (author.id != client.user.id && cont.startsWith(config_prefix)) {
-
-            
-            // 
             var invoke = cont.split(' ')[0].substr(config_prefix.length),
                 args   = cont.split(' ').slice(1)
-            
-            
             if (invoke in cmdmap) {
                 cmdmap[invoke](msg, args)
             }
         }
-
 })
 
 client.login(config_token)
