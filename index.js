@@ -17,7 +17,6 @@ var player = null
 var repeat = null
 var link = null
 var speaking = null
-var volume = 100
 
 client.on('ready', () => {
     activity()
@@ -43,7 +42,7 @@ async function play(link_local, repeat_local) {
         if(repeat == false) {return} 
         if(speaking == true) {return} 
         if(repeat == true) {
-            player = connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
+            play(link, "true")
         }
     })
 }
@@ -82,11 +81,14 @@ function cmd_stop(msg, args) {
     if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return}
     player.destroy()
     client.channels.cache.get(config_controlchannel).send("Music stopped")
+    repeat = false
 }
 
 function cmd_quit(msg, args) {
+    if(connection == null || connection.status != "0") {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can quit"); return}
     connection.disconnect()
     client.channels.cache.get(config_controlchannel).send("Quit the voice channel")
+    repeat = false
 }
 
 function cmd_pause(msg, args) {
