@@ -1,6 +1,7 @@
-const Discord       = require('discord.js')
-const ytdl          = require('ytdl-core')
-const ytsr          = require('ytsr');
+const Discord          = require('discord.js')
+const { MessageEmbed } = require('discord.js')
+const ytdl             = require('ytdl-core')
+const ytsr             = require('ytsr');
 
 var client = new Discord.Client()
 
@@ -170,8 +171,8 @@ async function cmd_playspotify(msg, args) {
             .setTimestamp()
         client.channels.cache.get(config_channel).send(emb)
     } else {
-        song_name = found.details
-        song_autor = found.state.replaceAll(";", ",")
+        song_name = found.details.toString()
+        song_autor = found.state.toString().replaceAll(";", ",")
         var song = []
         song.push("false")
         song.push(song_name + " - " + song_autor)
