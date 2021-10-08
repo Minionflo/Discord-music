@@ -125,6 +125,7 @@ function cmd_resume(msg, args) {
 
 function cmd_replay(msg, args) {
     play(link, false)
+    client.channels.cache.get(config_controlchannel).send("Music replay started")
 }
 
 async function cmd_controls(msg, args) {
