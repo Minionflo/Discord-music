@@ -134,8 +134,9 @@ async function cmd_controls(msg, args) {
     var r_stop = '⏹'
     var r_pause = '⏸'
     var r_resume = '▶'
+
     var message = await client.channels.cache.get(config_controlchannel).send("Controls")
-    //const filter = (r, u) => msg.guild.members.fetch(u.id).roles.cache.has(config_musicrole)
+    
     async function filter(r, u) {
         var user = await message.guild.members.fetch(u.id)
         var result = await user.roles.cache.has(config_musicrole)
