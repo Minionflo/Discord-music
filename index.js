@@ -4,13 +4,13 @@ const ytsr          = require('ytsr');
 
 var client = new Discord.Client()
 
-var config_token = process.env.TOKEN
-var config_prefix = process.env.PREFIX
-var config_status = process.env.STATUS
-var config_statustype = process.env.STATUSTYPE
-var config_channel = process.env.CHANNEL
-var config_controlchannel = process.env.CONTROLCHANNEL
-var config_musicrole = process.env.MUSICROLE
+var config_token = "ODY4MjM2ODU3ODA3MzM5NTMw.YPsulQ.TDmHXPL0Cy0NCXZ4SX-y-ZdUtTE"
+var config_prefix = "!"
+var config_status = "testing"
+var config_statustype = "PLAYING"
+var config_channel = "867458807003873330"
+var config_controlchannel = "895344875980075038"
+var config_musicrole = "773692177401511936"
 
 var connection = null
 var player = null
@@ -49,28 +49,32 @@ async function play(link_local, repeat_local) {
     })
 }
 async function stop() {
-    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return false }
+    if(player == null || speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return false }
     player.destroy()
     repeat = false
+    return true
 }
 async function quit() {
     if(connection == null || connection.status != "0") {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can quit"); return false }
     connection.disconnect()
     repeat = false
+    return true
 }
 async function pause() {
-    if(speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can pause"); return false }
+    if(player == null || speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can pause"); return false }
     player.pause()
+    return true
 }
 async function resume() {
     if(player == null || player.paused != true) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can resume"); return false }
     player.resume()
+    return true
 }
 
 var cmdmap = {
     join : cmd_join,
-    playlink : cmd_playlink,
     play : cmd_play,
+    playspotify : cmd_playspotify,
     stop : cmd_stop,
     quit : cmd_quit,
     pause : cmd_pause,
@@ -84,13 +88,6 @@ async function cmd_join(msg, args) {
     client.channels.cache.get(config_controlchannel).send("Joined the voice channel")
 }
 
-function cmd_playlink(msg, args) {
-    var repeat_local = false
-    if(args[0] == "true" || args[0] == "false") { repeat_local = args[0]; args.shift() }
-    play(args[0], repeat_local)
-    client.channels.cache.get(config_controlchannel).send("Music started")
-}
-
 async function cmd_play(msg, args) {
     var repeat_local = false
     if(args[0] == "true" || args[0] == "false") { repeat_local = args[0]; args.shift() }
@@ -101,6 +98,25 @@ async function cmd_play(msg, args) {
     await play(url, repeat_local)
     client.channels.cache.get(config_controlchannel).send("Music started")
     client.channels.cache.get(config_controlchannel).send("Link: " + link)
+}
+
+async function cmd_playspotify(msg, args) {
+    var song_name = null
+    var song_autor = null
+    var activ = await msg.author.presence.activities
+    var found = activ.find(function(array) {
+        if(array.name == "Spotify") { return true}
+    })
+    if(found == null) {
+        client.channels.cache.get(config_controlchannel).send("You need to play something on Spotify")
+    } else {
+        song_name = found.details
+        song_autor = found.state.replaceAll(";", ",")
+        var song = []
+        song.push("false")
+        song.push(song_name + " - " + song_autor)
+        cmd_play(null, song)
+    }
 }
 
 function cmd_stop(msg, args) {
@@ -149,11 +165,11 @@ async function cmd_controls(msg, args) {
     message.react(r_quit)
     const collector = message.createReactionCollector(filter);
     collector.on('collect', (r, u) => {
-        if(r.emoji.name == r_pause) { r.users.remove(u); pause() }
-        else if(r.emoji.name == r_resume) { r.users.remove(u); resume() }
-        else if(r.emoji.name == r_stop) { r.users.remove(u); stop() }
-        else if(r.emoji.name == r_join) { r.users.remove(u); join() }
-        else if(r.emoji.name == r_quit) { r.users.remove(u); quit() }
+        if(r.emoji.name == r_pause) { r.users.remove(u); if(pause() == false) { return } }
+        else if(r.emoji.name == r_resume) { r.users.remove(u); if(resume() == false) { return } }
+        else if(r.emoji.name == r_stop) { r.users.remove(u); if(stop() == false) { return } }
+        else if(r.emoji.name == r_join) { r.users.remove(u); if(join() == false) { return } }
+        else if(r.emoji.name == r_quit) { r.users.remove(u); if(quit() == false) { return } }
     })
 }
 
