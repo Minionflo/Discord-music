@@ -4,13 +4,13 @@ const ytsr          = require('ytsr');
 
 var client = new Discord.Client()
 
-var config_token = "ODY4MjM2ODU3ODA3MzM5NTMw.YPsulQ.TDmHXPL0Cy0NCXZ4SX-y-ZdUtTE"
-var config_prefix = "!"
-var config_status = "testing"
-var config_statustype = "PLAYING"
-var config_channel = "867458807003873330"
-var config_controlchannel = "895344875980075038"
-var config_musicrole = "773692177401511936"
+var config_token = process.env.TOKEN
+var config_prefix = process.env.PREFIX
+var config_status = process.env.STATUS
+var config_statustype = process.env.STATUSTYPE
+var config_channel = process.env.CHANNEL
+var config_controlchannel = process.env.CONTROLCHANNEL
+var config_musicrole = process.env.MUSICROLE
 
 var connection = null
 var player = null
