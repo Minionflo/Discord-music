@@ -43,30 +43,73 @@ async function play(link_local, repeat_local) {
         if(repeat == false) {return} 
         if(speaking == true) {return} 
         if(repeat == true) {
-            cmd_replay()
+            play(link, true)
+            var emb = new MessageEmbed()
+                .setTitle('Music')
+                .setColor('FFFFFF')
+                .setDescription("Music replay started")
+                .setFooter(msg.author.tag, msg.author.avatarURL())
+                .setTimestamp()
+            client.channels.cache.get(config_channel).send(emb)
             repeat = true
         }
     })
 }
 async function stop() {
-    if(player == null || speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can stop"); return false }
+    if(player == null || speaking == false) {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("The bot needs to have something it can stop")
+            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_channel).send(emb)
+        return false 
+    }
     player.destroy()
     repeat = false
     return true
 }
 async function quit() {
-    if(connection == null || connection.status != "0") {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can quit"); return false }
+    if(connection == null || connection.status != "0") {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("The bot needs to have something it can quit")
+            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_channel).send(emb)
+        return false
+    }
     connection.disconnect()
     repeat = false
     return true
 }
 async function pause() {
-    if(player == null || speaking == false) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can pause"); return false }
+    if(player == null || speaking == false) {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("The bot needs to have something it can pause")
+            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_channel).send(emb)
+        return false
+    }
     player.pause()
     return true
 }
 async function resume() {
-    if(player == null || player.paused != true) {client.channels.cache.get(config_controlchannel).send("The bot needs to have something it can resume"); return false }
+    if(player == null || player.paused != true) {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("The bot needs to have something it can resume")
+            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_channel).send(emb)
+        return false
+    }
     player.resume()
     return true
 }
@@ -85,7 +128,13 @@ var cmdmap = {
 
 async function cmd_join(msg, args) {
     join()
-    client.channels.cache.get(config_controlchannel).send("Joined the voice channel")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Joined the voice channel")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 async function cmd_play(msg, args) {
@@ -108,7 +157,13 @@ async function cmd_playspotify(msg, args) {
         if(array.name == "Spotify") { return true}
     })
     if(found == null) {
-        client.channels.cache.get(config_controlchannel).send("You need to play something on Spotify")
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need to play something on Spotify")
+            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_channel).send(emb)
     } else {
         song_name = found.details
         song_autor = found.state.replaceAll(";", ",")
@@ -121,27 +176,57 @@ async function cmd_playspotify(msg, args) {
 
 function cmd_stop(msg, args) {
     if (stop() == false) {return}
-    client.channels.cache.get(config_controlchannel).send("Music stopped")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Music stopped")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 function cmd_quit(msg, args) {
     if (quit() == false) {return}
-    client.channels.cache.get(config_controlchannel).send("Quit the voice channel")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Quit the voice channel")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 function cmd_pause(msg, args) {
     if (pause() == false) {return}
-    client.channels.cache.get(config_controlchannel).send("Music paused")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Music paused")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 function cmd_resume(msg, args) {
     if (resume() == false) {return}
-    client.channels.cache.get(config_controlchannel).send("Music resumed")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Music resumed")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 function cmd_replay(msg, args) {
     play(link, false)
-    client.channels.cache.get(config_controlchannel).send("Music replay started")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Music replay started")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 async function cmd_controls(msg, args) {
@@ -151,7 +236,13 @@ async function cmd_controls(msg, args) {
     var r_pause = '⏸'
     var r_resume = '▶'
 
-    var message = await client.channels.cache.get(config_controlchannel).send("Controls")
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Controls")
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    var message = await client.channels.cache.get(config_channel).send(emb)
     
     async function filter(r, u) {
         var user = await message.guild.members.fetch(u.id)
