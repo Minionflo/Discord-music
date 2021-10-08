@@ -49,9 +49,9 @@ async function play(link_local, repeat_local) {
                 .setTitle('Music')
                 .setColor('FFFFFF')
                 .setDescription("Music replay started")
-                .setFooter(msg.author.tag, msg.author.avatarURL())
+                .setFooter(client.user.tag, client.user.avatarURL())
                 .setTimestamp()
-            client.channels.cache.get(config_channel).send(emb)
+            client.channels.cache.get(config_controlchannel).send(emb)
             repeat = true
         }
     })
@@ -62,9 +62,9 @@ async function stop() {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("The bot needs to have something it can stop")
-            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
-        client.channels.cache.get(config_channel).send(emb)
+        client.channels.cache.get(config_controlchannel).send(emb)
         return false 
     }
     player.destroy()
@@ -77,9 +77,9 @@ async function quit() {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("The bot needs to have something it can quit")
-            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
-        client.channels.cache.get(config_channel).send(emb)
+        client.channels.cache.get(config_controlchannel).send(emb)
         return false
     }
     connection.disconnect()
@@ -92,9 +92,9 @@ async function pause() {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("The bot needs to have something it can pause")
-            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
-        client.channels.cache.get(config_channel).send(emb)
+        client.channels.cache.get(config_controlchannel).send(emb)
         return false
     }
     player.pause()
@@ -106,9 +106,9 @@ async function resume() {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("The bot needs to have something it can resume")
-            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
-        client.channels.cache.get(config_channel).send(emb)
+        client.channels.cache.get(config_controlchannel).send(emb)
         return false
     }
     player.resume()
@@ -133,9 +133,9 @@ async function cmd_join(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Joined the voice channel")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 async function cmd_play(msg, args) {
@@ -150,9 +150,9 @@ async function cmd_play(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Music started \n Link: " + link)
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 async function cmd_playspotify(msg, args) {
@@ -167,16 +167,16 @@ async function cmd_playspotify(msg, args) {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("You need to play something on Spotify")
-            .setFooter(msg.author.tag, msg.author.avatarURL())
+            .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
-        client.channels.cache.get(config_channel).send(emb)
+        client.channels.cache.get(config_controlchannel).send(emb)
     } else {
         song_name = found.details.toString()
-        song_autor = found.state.toString().replaceAll(";", ",")
+        song_autor = found.state.toString().replace(/;/g, ",")
         var song = []
         song.push("false")
         song.push(song_name + " - " + song_autor)
-        cmd_play(null, song)
+        cmd_play(msg, song)
     }
 }
 
@@ -186,9 +186,9 @@ function cmd_stop(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Music stopped")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 function cmd_quit(msg, args) {
@@ -197,9 +197,9 @@ function cmd_quit(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Quit the voice channel")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 function cmd_pause(msg, args) {
@@ -208,9 +208,9 @@ function cmd_pause(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Music paused")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 function cmd_resume(msg, args) {
@@ -219,9 +219,9 @@ function cmd_resume(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Music resumed")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 function cmd_replay(msg, args) {
@@ -230,9 +230,9 @@ function cmd_replay(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Music replay started")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    client.channels.cache.get(config_channel).send(emb)
+    client.channels.cache.get(config_controlchannel).send(emb)
 }
 
 async function cmd_controls(msg, args) {
@@ -246,9 +246,9 @@ async function cmd_controls(msg, args) {
         .setTitle('Music')
         .setColor('FFFFFF')
         .setDescription("Controls")
-        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setFooter(client.user.tag, client.user.avatarURL())
         .setTimestamp()
-    var message = await client.channels.cache.get(config_channel).send(emb)
+    var message = await client.channels.cache.get(config_controlchannel).send(emb)
     
     async function filter(r, u) {
         var user = await message.guild.members.fetch(u.id)
