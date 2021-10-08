@@ -145,8 +145,13 @@ async function cmd_play(msg, args) {
     var raw = await ytsr(filter.url, { limit: 1 })
     var url = raw.items[0].url
     await play(url, repeat_local)
-    client.channels.cache.get(config_controlchannel).send("Music started")
-    client.channels.cache.get(config_controlchannel).send("Link: " + link)
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Music started \n Link: " + link)
+        .setFooter(msg.author.tag, msg.author.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_channel).send(emb)
 }
 
 async function cmd_playspotify(msg, args) {
