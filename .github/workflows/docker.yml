@@ -1,0 +1,19 @@
+name: docker
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build_push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.15.5
+      - name: Login into docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{ secrets.DOCKER_PASSWORD}}
+      - name: Build the docker image
+        run: docker build -t minionflo/discord:music .
+      - name: Push the docker image
+          
