@@ -3,16 +3,17 @@ const { MessageEmbed } = require('discord.js')
 const ytdl             = require('ytdl-core')
 const ytsr             = require('ytsr')
 const fs               = require('fs')
+const mssg             = require('./mssg.js')
 
-var client = new Discord.Client()
+global.client = new Discord.Client()
 
 var config_token = process.env.TOKEN
-var config_prefix = process.env.PREFIX
-var config_status = process.env.STATUS
-var config_statustype = process.env.STATUSTYPE
-var config_channel = process.env.CHANNEL
-var config_controlchannel = process.env.CONTROLCHANNEL
-var config_musicrole = process.env.MUSICROLE
+global.config_prefix = process.env.PREFIX
+global.config_status = process.env.STATUS
+global.config_statustype = process.env.STATUSTYPE
+global.config_channel = process.env.CHANNEL
+global.config_controlchannel = process.env.CONTROLCHANNEL
+global.config_musicrole = process.env.MUSICROLE
 
 if(process.argv.slice(2) == "test") {
     var secret = fs.readFileSync('secret', 'utf8').split(/\r?\n/)
@@ -54,7 +55,6 @@ async function check_channel() {
 }
 async function join() {
     if(await check_channel() == false) {return false}
-    if(await check_channel() == "channel_empty") {return "channel_empty"}
     connection = await client.channels.cache.get(config_channel).join();
     return true
 }
@@ -66,35 +66,22 @@ async function play(link_local, repeat_local) {
     else { repeat = false }
     player = await connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
     player.on('speaking', async function(speaking_local) {
-        speaking = speaking_local
-        if(repeat == false) {return} 
-        if(speaking == true) {return}
+        speaking = speaking_local 
+        if(speaking == true) {return false}
         if(queue != []) {
             if(play(queue[0], false) == false) {return false}
             queue.shift()
         }
         if(repeat == true) {
             play(link, true)
-            var emb = new MessageEmbed()
-                .setTitle('Music')
-                .setColor('FFFFFF')
-                .setDescription("Music replay started")
-                .setFooter(client.user.tag, client.user.avatarURL())
-                .setTimestamp()
-            client.channels.cache.get(config_controlchannel).send(emb)
+            mssg.cmd_replay()
             repeat = true
         }
     })
 }
 async function stop() {
     if(player == null || speaking == false) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("The bot needs to have something it can stop")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.nothing_stop()
         return false 
     }
     player.destroy()
@@ -103,13 +90,7 @@ async function stop() {
 }
 async function quit() {
     if(connection == null) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("The bot needs to have something it can quit")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.nothing_quit()
         return false
     }
     connection.disconnect()
@@ -118,13 +99,7 @@ async function quit() {
 }
 async function pause() {
     if(player == null || speaking == false) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("The bot needs to have something it can pause")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.nothing_pause()
         return false
     }
     player.pause()
@@ -132,42 +107,27 @@ async function pause() {
 }
 async function resume() {
     if(player == null || player.paused != true) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("The bot needs to have something it can resume")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.nothing_resume()
         return false
     }
     player.resume()
     return true
 }
 async function queue_add(args) {
+    if(args == []) {
+
+    }
     var filters = await ytsr.getFilters(args.join(" ").toString())
     var filter = await filters.get('Type').get('Video');
     var raw = await ytsr(filter.url, { limit: 1 })
     var url = raw.items[0].url
     queue.push(url)
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("added " + url + " to the queue")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.queue_add(url)
 }
 async function queue_list(args) {
     var list = []
     if(queue == []) {
-        var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("The queue is empty")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.queue_list_empty()
     return false
     }
     queue.forEach(async (link, index) => {
@@ -175,44 +135,28 @@ async function queue_list(args) {
         link = index + ". " + link
         list.push(link)
     })
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription(list)
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.queue_list(list)
 }
 async function queue_remove(args) {
     var index = parseInt(args[0])
     var removed = queue.at(index - 1)
     if(removed == undefined) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("Not found")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.queue_remove_not_found()
     return false
     }
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Removed " + removed)
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.queue_remove(removed)
     queue.splice(index - 1, 1)
 }
 async function queue_play(args) {
-    if(await play(queue[0], false) == false) {return false}
+    if(await play(queue[0], false) == false) {mssg.queue_play_error(); return false}
     queue.shift()
+    mssg.queue_play()
 }
 async function queue_next(args) {
     if(await stop() == false) {return false}
     if(await play(queue[0], false) == false) {return false}
-    
+    mssg.queue_next()
+    return true
 }
 
 var cmdmap = {
@@ -228,37 +172,10 @@ var cmdmap = {
     queue : cmd_queue
 }
 
-async function cmd_join(msg, args) {
-    if(await join() == false) {return false}
-    if(await join() == "channel_empty") {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("Someone needs to be in the voicechannel")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
-        return false
-    }
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Joined the voice channel")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
-}
-
 async function cmd_play(msg, args) {
-    if(await cmd_join() == false) {return false}
+    if(await join() == false) {return false}
     if(join() == "channel_empty") {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("Someone needs to be in the voicechannel")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.cmd_play_channel_empty()
         return false
     }
     var repeat_local = false
@@ -268,13 +185,7 @@ async function cmd_play(msg, args) {
     var raw = await ytsr(filter.url, { limit: 1 })
     var url = raw.items[0].url
     await play(url, repeat_local)
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Music started \n Link: " + link)
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.cmd_play(link)
 }
 
 async function cmd_playspotify(msg, args) {
@@ -285,13 +196,8 @@ async function cmd_playspotify(msg, args) {
         if(array.name == "Spotify") { return true}
     })
     if(found == null) {
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("You need to play something on Spotify")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.cmd_playspotify_no_spotify()
+        return false
     } else {
         song_name = found.details.toString()
         song_autor = found.state.toString().replace(/;/g, ",")
@@ -304,35 +210,12 @@ async function cmd_playspotify(msg, args) {
 
 async function cmd_stop(msg, args) {
     if (await stop() == false) {return}
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Music stopped")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
-}
-
-async function cmd_quit(msg, args) {
-    if (await quit() == false) {return false}
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Quit the voice channel")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.cmd_stop()
 }
 
 async function cmd_pause(msg, args) {
     if (await pause() == false) {return}
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Music paused")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    mssg.cmd_pause()
 }
 
 async function cmd_resume(msg, args) {
@@ -347,14 +230,8 @@ async function cmd_resume(msg, args) {
 }
 
 async function cmd_replay(msg, args) {
-    if(await play(link, false) == false) {return false}
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Music replay started")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+    if(await play(link, false) == false) {mssg.cmd_replay_error(); return}
+    mssg.cmd_replay()
 }
 
 async function cmd_controls(msg, args) {
@@ -364,13 +241,7 @@ async function cmd_controls(msg, args) {
     var r_pause = '⏸'
     var r_resume = '▶'
 
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Controls")
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    var message = await client.channels.cache.get(config_controlchannel).send(emb)
+    var message = await mssg.cmd_controls()
     
     async function filter(r, u) {
         var user = await message.guild.members.fetch(u.id)
@@ -436,13 +307,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     if(await check_channel() == true) {await join()}
     if(newState.id == client.user.id && newState.serverDeaf == false) {
         connection.voice.setDeaf(true)
-        var emb = new MessageEmbed()
-            .setTitle('Music')
-            .setColor('FFFFFF')
-            .setDescription("It is not possible to undeafen the music bot")
-            .setFooter(client.user.tag, client.user.avatarURL())
-            .setTimestamp()
-        client.channels.cache.get(config_controlchannel).send(emb)
+        mssg.undeafen()
     }
 }) 
 
