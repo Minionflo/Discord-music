@@ -216,11 +216,11 @@ async function queue_next(args) {
 }
 
 var cmdmap = {
-    join : cmd_join,
+    //join : cmd_join,
     play : cmd_play,
     playspotify : cmd_playspotify,
     stop : cmd_stop,
-    quit : cmd_quit,
+    //quit : cmd_quit,
     pause : cmd_pause,
     resume : cmd_resume,
     replay : cmd_replay,
