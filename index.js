@@ -29,11 +29,22 @@ function activity() {
     client.user.setActivity(config_status, {type: config_statustype})
 }
 
+
+async function check_channel() {
+    var voicecha = await client.channels.cache.get(config_channel).members
+    if(voicecha.has("868236857807339530")) {voicecha.delete("868236857807339530")}
+    if(voicecha.size == 0) {
+        return "channel_empty"
+    }
+    return true
+}
 async function join() {
+    if(await check_channel() == false) {return false}
+    if(await check_channel() == "channel_empty") {return "channel_empty"}
     connection = await client.channels.cache.get(config_channel).join();
+    return true
 }
 async function play(link_local, repeat_local) {
-    await join()
     link = link_local
     if(repeat_local == "true") { repeat = true } 
     else if(repeat_local == "false") { repeat = false} 
@@ -72,7 +83,7 @@ async function stop() {
     return true
 }
 async function quit() {
-    if(connection == null || connection.status != "0") {
+    if(connection == null) {
         var emb = new MessageEmbed()
             .setTitle('Music')
             .setColor('FFFFFF')
@@ -128,7 +139,17 @@ var cmdmap = {
 }
 
 async function cmd_join(msg, args) {
-    join()
+    if(await join() == false) {return false}
+    if(await join() == "channel_empty") {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("Someone needs to be in the voicechannel")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+        return false
+    }
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -139,6 +160,17 @@ async function cmd_join(msg, args) {
 }
 
 async function cmd_play(msg, args) {
+    if(await cmd_join() == false) {return false}
+    if(join() == "channel_empty") {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("Someone needs to be in the voicechannel")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+        return false
+    }
     var repeat_local = false
     if(args[0] == "true" || args[0] == "false") { repeat_local = args[0]; args.shift() }
     var filters = await ytsr.getFilters(args.join(" ").toString())
@@ -180,8 +212,8 @@ async function cmd_playspotify(msg, args) {
     }
 }
 
-function cmd_stop(msg, args) {
-    if (stop() == false) {return}
+async function cmd_stop(msg, args) {
+    if (await stop() == false) {return}
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -191,8 +223,8 @@ function cmd_stop(msg, args) {
     client.channels.cache.get(config_controlchannel).send(emb)
 }
 
-function cmd_quit(msg, args) {
-    if (quit() == false) {return}
+async function cmd_quit(msg, args) {
+    if (await quit() == false) {return false}
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -202,8 +234,8 @@ function cmd_quit(msg, args) {
     client.channels.cache.get(config_controlchannel).send(emb)
 }
 
-function cmd_pause(msg, args) {
-    if (pause() == false) {return}
+async function cmd_pause(msg, args) {
+    if (await pause() == false) {return}
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -213,8 +245,8 @@ function cmd_pause(msg, args) {
     client.channels.cache.get(config_controlchannel).send(emb)
 }
 
-function cmd_resume(msg, args) {
-    if (resume() == false) {return}
+async function cmd_resume(msg, args) {
+    if (await resume() == false) {return}
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -224,8 +256,8 @@ function cmd_resume(msg, args) {
     client.channels.cache.get(config_controlchannel).send(emb)
 }
 
-function cmd_replay(msg, args) {
-    play(link, false)
+async function cmd_replay(msg, args) {
+    if(await play(link, false) == false) {return false}
     var emb = new MessageEmbed()
         .setTitle('Music')
         .setColor('FFFFFF')
@@ -261,12 +293,12 @@ async function cmd_controls(msg, args) {
     message.react(r_join)
     message.react(r_quit)
     const collector = message.createReactionCollector(filter);
-    collector.on('collect', (r, u) => {
-        if(r.emoji.name == r_pause) { r.users.remove(u); if(pause() == false) { return } }
-        else if(r.emoji.name == r_resume) { r.users.remove(u); if(resume() == false) { return } }
-        else if(r.emoji.name == r_stop) { r.users.remove(u); if(stop() == false) { return } }
-        else if(r.emoji.name == r_join) { r.users.remove(u); if(join() == false) { return } }
-        else if(r.emoji.name == r_quit) { r.users.remove(u); if(quit() == false) { return } }
+    collector.on('collect', async (r, u) => {
+        if(r.emoji.name == r_pause) { r.users.remove(u); if(await pause() == false) { return false} }
+        else if(r.emoji.name == r_resume) { r.users.remove(u); if(await resume() == false) { return false} }
+        else if(r.emoji.name == r_stop) { r.users.remove(u); if(await stop() == false) { return false} }
+        else if(r.emoji.name == r_join) { r.users.remove(u); if(await join() == false) { return false} }
+        else if(r.emoji.name == r_quit) { r.users.remove(u); if(await quit() == false) { return false} }
     })
 }
 
@@ -277,8 +309,8 @@ client.on('message', async (msg) => {
         guild  = msg.guild,
         author = msg.author
 
-        if(msg.member.roles.cache.has(config_musicrole) == false) {return}
-        if(msg.channel != client.channels.cache.get(config_controlchannel)) {return}
+        if(msg.member.roles.cache.has(config_musicrole) == false) {return false}
+        if(msg.channel != client.channels.cache.get(config_controlchannel)) {return false}
         if (author.id != client.user.id && cont.startsWith(config_prefix)) {
             var invoke = cont.split(' ')[0].substr(config_prefix.length),
                 args   = cont.split(' ').slice(1)
@@ -287,5 +319,9 @@ client.on('message', async (msg) => {
             }
         }
 })
+
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    if(await check_channel() == "channel_empty") {quit()}
+}) 
 
 client.login(config_token)
