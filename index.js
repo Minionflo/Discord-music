@@ -334,6 +334,7 @@ client.on('message', async (msg) => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if(await check_channel() == "channel_empty") {quit()}
+    if(await check_channel() == true) {join()}
 }) 
 
 client.login(config_token)
