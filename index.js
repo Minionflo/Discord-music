@@ -334,7 +334,17 @@ client.on('message', async (msg) => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if(await check_channel() == "channel_empty") {quit()}
-    if(await check_channel() == true) {join()}
+    if(await check_channel() == true) {await join()}
+    if(newState.id == client.user.id && newState.serverDeaf == false) {
+        connection.voice.setDeaf(true)
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("It is not possible to undeafen the music bot")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+    }
 }) 
 
 client.login(config_token)
