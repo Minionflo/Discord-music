@@ -166,5 +166,14 @@ module.exports = {
             .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
         client.channels.cache.get(config_controlchannel).send(emb)
+    },
+    no_role() {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need the role <@&" + config_musicrole + ">")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
     }
 }

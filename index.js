@@ -55,6 +55,7 @@ async function check_channel() {
 }
 async function join() {
     if(await check_channel() == false) {return false}
+    if(await check_channel() == "channel_empty") {return "channel_empty"}
     connection = await client.channels.cache.get(config_channel).join();
     return true
 }
@@ -73,8 +74,8 @@ async function play(link_local, repeat_local) {
             queue.shift()
         }
         if(repeat == true) {
-            play(link, true)
             mssg.cmd_replay()
+            play(link, true)
             repeat = true
         }
     })
@@ -184,8 +185,8 @@ async function cmd_play(msg, args) {
     var filter = await filters.get('Type').get('Video');
     var raw = await ytsr(filter.url, { limit: 1 })
     var url = raw.items[0].url
+    mssg.cmd_play(url)
     await play(url, repeat_local)
-    mssg.cmd_play(link)
 }
 
 async function cmd_playspotify(msg, args) {
@@ -282,16 +283,17 @@ async function cmd_queue(msg, args) {
     }
 }
 
-client.on('message', async (msg) => {
+client.on('message', (msg) => {
     var cont   = msg.content,
         member = msg.member,
         chan   = msg.channel,
         guild  = msg.guild,
         author = msg.author
 
-        if(msg.member.roles.cache.has(config_musicrole) == false) {return false}
+        if(author.id == client.user.id) {return false}
+        if(msg.member.roles.cache.has(config_musicrole) == false) {mssg.no_role(); return false}
         if(msg.channel != client.channels.cache.get(config_controlchannel)) {return false}
-        if (author.id != client.user.id && cont.startsWith(config_prefix)) {
+        if (cont.startsWith(config_prefix)) {
             var invoke = cont.split(' ')[0].substr(config_prefix.length),
                 args   = cont.split(' ').slice(1)
             if (invoke in cmdmap) {
@@ -303,7 +305,7 @@ client.on('message', async (msg) => {
 })
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    if(await check_channel() == "channel_empty") {quit()}
+    if(await check_channel() == "channel_empty") {await quit()}
     if(await check_channel() == true) {await join()}
     if(newState.id == client.user.id && newState.serverDeaf == false) {
         connection.voice.setDeaf(true)
