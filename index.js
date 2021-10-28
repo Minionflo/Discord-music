@@ -1,7 +1,8 @@
 const Discord          = require('discord.js')
 const { MessageEmbed } = require('discord.js')
 const ytdl             = require('ytdl-core')
-const ytsr             = require('ytsr');
+const ytsr             = require('ytsr')
+const fs               = require('fs')
 
 var client = new Discord.Client()
 
@@ -12,6 +13,17 @@ var config_statustype = process.env.STATUSTYPE
 var config_channel = process.env.CHANNEL
 var config_controlchannel = process.env.CONTROLCHANNEL
 var config_musicrole = process.env.MUSICROLE
+
+if(process.argv.slice(2) == "test") {
+    var secret = fs.readFileSync('secret', 'utf8').split(/\r?\n/)
+    secret.forEach(function(line) {
+        line = line.split("=")
+        var name = line[0]
+        var value = line[1]
+        str = name+' = '+value;
+        eval(str)
+    })
+}
 
 var connection = null
 var player = null
@@ -32,7 +44,7 @@ function activity() {
 
 async function check_channel() {
     var voicecha = await client.channels.cache.get(config_channel).members
-    if(voicecha.has("868236857807339530")) {voicecha.delete("868236857807339530")}
+    if(voicecha.has(await client.user.id)) {voicecha.delete(await client.user.id)}
     if(voicecha.size == 0) {
         return "channel_empty"
     }
