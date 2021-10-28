@@ -30,10 +30,12 @@ var player = null
 var repeat = false
 var link = null
 var speaking = null
+var queue = []
 
 client.on('ready', () => {
     activity()
     setInterval(activity, 60000)
+    join()
     console.log(`Online`)
 })
 
@@ -57,15 +59,20 @@ async function join() {
     return true
 }
 async function play(link_local, repeat_local) {
+    if(await join() == false) {return false}
     link = link_local
     if(repeat_local == "true") { repeat = true } 
     else if(repeat_local == "false") { repeat = false} 
     else { repeat = false }
     player = await connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
-    player.on('speaking', function(speaking_local) {
+    player.on('speaking', async function(speaking_local) {
         speaking = speaking_local
         if(repeat == false) {return} 
-        if(speaking == true) {return} 
+        if(speaking == true) {return}
+        if(queue != []) {
+            if(play(queue[0], false) == false) {return false}
+            queue.shift()
+        }
         if(repeat == true) {
             play(link, true)
             var emb = new MessageEmbed()
@@ -137,6 +144,76 @@ async function resume() {
     player.resume()
     return true
 }
+async function queue_add(args) {
+    var filters = await ytsr.getFilters(args.join(" ").toString())
+    var filter = await filters.get('Type').get('Video');
+    var raw = await ytsr(filter.url, { limit: 1 })
+    var url = raw.items[0].url
+    queue.push(url)
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("added " + url + " to the queue")
+        .setFooter(client.user.tag, client.user.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_controlchannel).send(emb)
+}
+async function queue_list(args) {
+    var list = []
+    if(queue == []) {
+        var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("The queue is empty")
+        .setFooter(client.user.tag, client.user.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_controlchannel).send(emb)
+    return false
+    }
+    queue.forEach(async (link, index) => {
+        index = index + 1
+        link = index + ". " + link
+        list.push(link)
+    })
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription(list)
+        .setFooter(client.user.tag, client.user.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_controlchannel).send(emb)
+}
+async function queue_remove(args) {
+    var index = parseInt(args[0])
+    var removed = queue.at(index - 1)
+    if(removed == undefined) {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("Not found")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+    client.channels.cache.get(config_controlchannel).send(emb)
+    return false
+    }
+    var emb = new MessageEmbed()
+        .setTitle('Music')
+        .setColor('FFFFFF')
+        .setDescription("Removed " + removed)
+        .setFooter(client.user.tag, client.user.avatarURL())
+        .setTimestamp()
+    client.channels.cache.get(config_controlchannel).send(emb)
+    queue.splice(index - 1, 1)
+}
+async function queue_play(args) {
+    if(await play(queue[0], false) == false) {return false}
+    queue.shift()
+}
+async function queue_next(args) {
+    if(await stop() == false) {return false}
+    if(await play(queue[0], false) == false) {return false}
+    
+}
 
 var cmdmap = {
     join : cmd_join,
@@ -147,7 +224,8 @@ var cmdmap = {
     pause : cmd_pause,
     resume : cmd_resume,
     replay : cmd_replay,
-    controls : cmd_controls
+    controls : cmd_controls,
+    queue : cmd_queue
 }
 
 async function cmd_join(msg, args) {
@@ -314,6 +392,25 @@ async function cmd_controls(msg, args) {
     })
 }
 
+async function cmd_queue(msg, args) {
+    if(args[0] == "add") {
+        args.shift()
+        if(await queue_add(args) == false) {return false}
+    } else if(args[0] == "list") {
+        args.shift()
+        if(await queue_list(args) == false) {return false}
+    } else if(args[0] == "remove") {
+        args.shift()
+        if(await queue_remove(args) == false) {return false}
+    } else if(args[0] == "play") {
+        args.shift()
+        if(await queue_play(args) == false) {return false}
+    } else if(args[0] == "next") {
+        args.shift()
+        if(await queue_next(args) == false) {return false}
+    }
+}
+
 client.on('message', async (msg) => {
     var cont   = msg.content,
         member = msg.member,
@@ -327,7 +424,9 @@ client.on('message', async (msg) => {
             var invoke = cont.split(' ')[0].substr(config_prefix.length),
                 args   = cont.split(' ').slice(1)
             if (invoke in cmdmap) {
-                cmdmap[invoke](msg, args)
+                if (cmdmap[invoke](msg, args) == false) {
+                    console.log("ERROR")
+                }
             }
         }
 })
