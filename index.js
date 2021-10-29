@@ -47,8 +47,12 @@ function activity() {
 
 async function check_channel() {
     var voicecha = await client.channels.cache.get(config_channel).members
+    var role = 0
     if(voicecha.has(await client.user.id)) {voicecha.delete(await client.user.id)}
-    if(voicecha.size == 0) {
+    await voicecha.forEach(async (value) => {
+        if(await value.roles.cache.has(config_musicrole) == true) { role = role + 1 }
+    })
+    if(role <= 0) {
         return "channel_empty"
     }
     return true
