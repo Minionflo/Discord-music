@@ -310,7 +310,7 @@ client.on('message', (msg) => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if(await check_channel() == "channel_empty") {await quit()}
-    if(await check_channel() == true) {await join()}
+    else if(await check_channel() == true) {await join()}
     if(newState.id == client.user.id && newState.serverDeaf == false) {
         connection.voice.setDeaf(true)
         mssg.undeafen()
