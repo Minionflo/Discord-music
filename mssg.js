@@ -1,4 +1,4 @@
-const Discord          = require('discord.js')
+const Discord = require('discord.js')
 const { MessageEmbed } = require('discord.js')
 
 module.exports = {
@@ -84,13 +84,13 @@ module.exports = {
         client.channels.cache.get(config_controlchannel).send(emb)
     },
     queue_remove(removed) {
-    var emb = new MessageEmbed()
-        .setTitle('Music')
-        .setColor('FFFFFF')
-        .setDescription("Removed " + removed)
-        .setFooter(client.user.tag, client.user.avatarURL())
-        .setTimestamp()
-    client.channels.cache.get(config_controlchannel).send(emb)
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("Removed " + removed)
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
     },
     queue_play() {
 
@@ -147,7 +147,13 @@ module.exports = {
         client.channels.cache.get(config_controlchannel).send(emb)
     },
     cmd_replay_error() {
-
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("Replay Error")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
     },
     cmd_controls() {
         var emb = new MessageEmbed()
@@ -172,6 +178,42 @@ module.exports = {
             .setTitle('Music')
             .setColor('FFFFFF')
             .setDescription("You need the role <@&" + config_musicrole + ">")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+    },
+    queue_add_no_args() {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need to povide args")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+    },
+    queue_remove_no_args() {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need to povide args")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+    },
+    cmd_play_no_args() {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need to povide args")
+            .setFooter(client.user.tag, client.user.avatarURL())
+            .setTimestamp()
+        client.channels.cache.get(config_controlchannel).send(emb)
+    },
+    cmd_queue_no_args() {
+        var emb = new MessageEmbed()
+            .setTitle('Music')
+            .setColor('FFFFFF')
+            .setDescription("You need to povide args")
             .setFooter(client.user.tag, client.user.avatarURL())
             .setTimestamp()
         client.channels.cache.get(config_controlchannel).send(emb)

@@ -14,6 +14,7 @@ global.config_statustype = process.env.STATUSTYPE
 global.config_channel = process.env.CHANNEL
 global.config_controlchannel = process.env.CONTROLCHANNEL
 global.config_musicrole = process.env.MUSICROLE
+global.config_permanent_talk = process.env.PERMANENT_TALK
 
 if(process.argv.slice(2) == "test") {
     var secret = fs.readFileSync('secret', 'utf8').split(/\r?\n/)
@@ -28,10 +29,9 @@ if(process.argv.slice(2) == "test") {
 
 var connection = null
 var player = null
-var repeat = false
 var link = null
 var speaking = null
-var queue = []
+global.queue = []
 
 client.on('ready', () => {
     activity()
@@ -47,28 +47,21 @@ function activity() {
 
 async function check_channel() {
     var voicecha = await client.channels.cache.get(config_channel).members
-    var role = 0
     if(voicecha.has(await client.user.id)) {voicecha.delete(await client.user.id)}
-    await voicecha.forEach(async (value) => {
-        if(await value.roles.cache.has(config_musicrole) == true) { role = role + 1 }
-    })
-    if(role <= 0) {
+    if(voicecha.size <= 0) {
         return "channel_empty"
     }
     return true
 }
 async function join() {
     if(await check_channel() == false) {return false}
-    if(await check_channel() == "channel_empty") {return "channel_empty"}
+    if(await check_channel() == "channel_empty" && config_permanent_talk != "true") {return "channel_empty"}
     connection = await client.channels.cache.get(config_channel).join();
     return true
 }
-async function play(link_local, repeat_local) {
-    if(await join() == false) {return false}
+async function play(link_local) {
+    if(config_permanent_talk != "true") {if(await join() == false) {return false}}
     link = link_local
-    if(repeat_local == "true") { repeat = true } 
-    else if(repeat_local == "false") { repeat = false} 
-    else { repeat = false }
     player = await connection.play(ytdl(link, { filter: 'audioonly', quality: 'highestaudio'}))
     player.on('speaking', async function(speaking_local) {
         speaking = speaking_local 
@@ -76,11 +69,6 @@ async function play(link_local, repeat_local) {
         if(queue != []) {
             if(play(queue[0], false) == false) {return false}
             queue.shift()
-        }
-        if(repeat == true) {
-            mssg.cmd_replay()
-            play(link, true)
-            repeat = true
         }
     })
 }
@@ -90,7 +78,6 @@ async function stop() {
         return false 
     }
     player.destroy()
-    repeat = false
     return true
 }
 async function quit() {
@@ -99,7 +86,6 @@ async function quit() {
         return false
     }
     connection.disconnect()
-    repeat = false
     return true
 }
 async function pause() {
@@ -119,9 +105,7 @@ async function resume() {
     return true
 }
 async function queue_add(args) {
-    if(args == []) {
-
-    }
+    if(args == []) {mssg.queue_add_no_args(); return false}
     var filters = await ytsr.getFilters(args.join(" ").toString())
     var filter = await filters.get('Type').get('Video');
     var raw = await ytsr(filter.url, { limit: 1 })
@@ -133,7 +117,7 @@ async function queue_list(args) {
     var list = []
     if(queue == []) {
         mssg.queue_list_empty()
-    return false
+        return false
     }
     queue.forEach(async (link, index) => {
         index = index + 1
@@ -143,6 +127,7 @@ async function queue_list(args) {
     mssg.queue_list(list)
 }
 async function queue_remove(args) {
+    if(args == []) {mssg.queue_remove_no_args(); return false}
     var index = parseInt(args[0])
     var removed = queue.at(index - 1)
     if(removed == undefined) {
@@ -178,19 +163,18 @@ var cmdmap = {
 }
 
 async function cmd_play(msg, args) {
+    if(args == []) {mssg.cmd_play_no_args(); return false}
     if(await join() == false) {return false}
     if(join() == "channel_empty") {
         mssg.cmd_play_channel_empty()
         return false
     }
-    var repeat_local = false
-    if(args[0] == "true" || args[0] == "false") { repeat_local = args[0]; args.shift() }
     var filters = await ytsr.getFilters(args.join(" ").toString())
     var filter = await filters.get('Type').get('Video');
     var raw = await ytsr(filter.url, { limit: 1 })
     var url = raw.items[0].url
     mssg.cmd_play(url)
-    await play(url, repeat_local)
+    await play(url)
 }
 
 async function cmd_playspotify(msg, args) {
@@ -235,13 +219,12 @@ async function cmd_resume(msg, args) {
 }
 
 async function cmd_replay(msg, args) {
-    if(await play(link, false) == false) {mssg.cmd_replay_error(); return}
+    if(queue =! []) {mssg.cmd_replay_error(); return}
+    if(await play(link) == false) {mssg.cmd_replay_error(); return}
     mssg.cmd_replay()
 }
 
 async function cmd_controls(msg, args) {
-    var r_join = '➕'
-    var r_quit = '➖'
     var r_stop = '⏹'
     var r_pause = '⏸'
     var r_resume = '▶'
@@ -263,12 +246,11 @@ async function cmd_controls(msg, args) {
         if(r.emoji.name == r_pause) { r.users.remove(u); if(await pause() == false) { return false} }
         else if(r.emoji.name == r_resume) { r.users.remove(u); if(await resume() == false) { return false} }
         else if(r.emoji.name == r_stop) { r.users.remove(u); if(await stop() == false) { return false} }
-        else if(r.emoji.name == r_join) { r.users.remove(u); if(await join() == false) { return false} }
-        else if(r.emoji.name == r_quit) { r.users.remove(u); if(await quit() == false) { return false} }
     })
 }
 
 async function cmd_queue(msg, args) {
+    if(args == []) {mssg.cmd_queue_no_args(); return false}
     if(args[0] == "add") {
         args.shift()
         if(await queue_add(args) == false) {return false}
@@ -309,8 +291,8 @@ client.on('message', (msg) => {
 })
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    if(await check_channel() == "channel_empty") {await quit()}
-    else if(await check_channel() == true) {await join()}
+    if(await check_channel() == "channel_empty" && config_permanent_talk != "true") {await quit()}
+    if(await check_channel() == true && config_permanent_talk != "true") {await join()}
     if(newState.id == client.user.id && newState.serverDeaf == false) {
         connection.voice.setDeaf(true)
         mssg.undeafen()
