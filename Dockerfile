@@ -1,4 +1,4 @@
-FROM node:14.15.5
+FROM node:14.18.1
 RUN mkdir -p /usr/src/bot
 WORKDIR /usr/src/bot
 COPY . /usr/src/bot
