@@ -12,7 +12,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.7.0",
     "bufferutil": "^4.0.4",
-    "discord.js": "12.5.3",
+    "discord.js": "14.0.0",
     "ffmpeg-static": "^4.4.0",
     "sodium": "^3.0.2",
     "utf-8-validate": "^5.0.6",
